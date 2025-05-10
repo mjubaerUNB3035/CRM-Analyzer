@@ -42,6 +42,30 @@ def analyze():
         })
     return jsonify(results)
 
+@app.route("/upload", methods=["POST"])
+def upload():
+    global data
+    if 'file' not in request.files:
+        return "No file uploaded", 400
+    file = request.files['file']
+    if file.filename == '':
+        return "No selected file", 400
+    try:
+        content = file.read()
+        decoded = content.decode("utf-8")
+        df = pd.read_csv(io.StringIO(decoded))
+        # Ensure 'emails' column is parsed as list
+        df["emails"] = df["emails"].apply(eval)
+        data = df
+        return "File uploaded and data loaded successfully. Access /analyze to see results."
+    except Exception as e:
+        return f"Error processin"
+
+@app.route("/")
+def home():
+    return "Smart Relationship Dashboard API is running. Visit /analyze to view results."
+
+
 if __name__ == "__main__":
      print("Starting Flask server...")
      app.run(debug=True, port=5050)
