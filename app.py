@@ -5,15 +5,12 @@ from flask import Flask, request, jsonify
 from textblob import TextBlob
 import pandas as pd
 import datetime
+import io
 
 app = Flask(__name__)
 
-# Simulated data loading
-data = pd.DataFrame([
-    {"name": "Alice Johnson", "last_contact": "2024-12-15", "emails": ["Let's catch up soon!", "Great work on the project."]},
-    {"name": "Bob Smith", "last_contact": "2024-08-01", "emails": ["Not happy with the results.", "Please fix the issue immediately."]},
-    {"name": "Carol Lee", "last_contact": "2025-01-10", "emails": ["Thanks for the update.", "Looking forward to next steps."]},
-])
+## Initialize global data as empty DataFrame
+data = pd.DataFrame([])
 
 # compute engagement score
 def compute_engagement_score(last_contact_str):
@@ -54,12 +51,12 @@ def upload():
         content = file.read()
         decoded = content.decode("utf-8")
         df = pd.read_csv(io.StringIO(decoded))
-        # Ensure 'emails' column is parsed as list
-        df["emails"] = df["emails"].apply(eval)
+        df["emails"] = df["emails"].apply(eval)  # Convert string to list
         data = df
         return "File uploaded and data loaded successfully. Access /analyze to see results."
     except Exception as e:
-        return f"Error processin"
+        return f"Error processing file: {e}", 500
+
 
 @app.route("/")
 def home():
