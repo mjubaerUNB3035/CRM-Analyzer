@@ -88,6 +88,34 @@ def analyze():
         })
     return jsonify(results)
 
+@app.route("/analyze/top", methods=["GET"])
+def top_clients():
+    metric = request.args.get("by", "engagement").lower()
+    try:
+        n = int(request.args.get("n", 5))
+    except ValueError:
+        return jsonify({"error": "Parameter 'n' must be an integer."}), 400
+
+    if metric not in ["engagement", "sentiment"]:
+        return jsonify({"error": "Parameter 'by' must be either 'engagement' or 'sentiment'."}), 400
+
+    results = []
+    for _, row in data.iterrows():
+        engagement_score = compute_engagement_score(row["last_contact"], row["emails"])
+        sentiment = compute_sentiment(row["emails"])
+
+        results.append({
+            "name": row["name"],
+            "engagement_score": engagement_score,
+            "sentiment": sentiment
+        })
+
+    key = "engagement_score" if metric == "engagement" else "sentiment"
+    sorted_results = sorted(results, key=lambda x: x[key], reverse=True)
+
+    return jsonify(sorted_results[:n])
+
+
 @app.route("/upload", methods=["POST"])
 def upload():
     global data
