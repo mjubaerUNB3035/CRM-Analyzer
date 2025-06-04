@@ -31,6 +31,20 @@
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="templates\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="sample.csv">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="templates\index.html">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="templates\results.html">
+      <SubType>Code</SubType>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets" />
   <!-- Specify pre- and post-build commands in the BeforeBuild and 
        AfterBuild targets below. -->

@@ -2,6 +2,7 @@
 # Description: Backend API for analyzing CRM data to assess engagement strength and communication sentiment
 
 from flask import Flask, request, jsonify
+from flask import render_template
 from textblob import TextBlob
 import pandas as pd
 import datetime
@@ -15,16 +16,27 @@ data = pd.DataFrame([])
 # Temporary sample data for testing
 sample_data = pd.DataFrame([
     {
-        "name": "MD",
-        "last_contact": "2025-04-10",
-        "emails": ["Appreciate your effort.", "Let's connect again soon."]
+        "name": "Client A",
+        "last_contact": "2025-05-20",
+        "emails": ["Great work!", "Appreciate the update."]
     },
     {
-        "name": "ABC",
-        "last_contact": "2025-5-12",
-        "emails": ["This is unacceptable.", "I need a response now."]
+        "name": "Client B",
+        "last_contact": "2025-04-10",
+        "emails": ["Need help with the issue.", "Please follow up."]
+    },
+    {
+        "name": "Client C",
+        "last_contact": "2025-03-05",
+        "emails": ["This is unacceptable.", "Very disappointed."]
+    },
+    {
+        "name": "Client D",
+        "last_contact": "2025-05-22",
+        "emails": ["Excellent support!", "Let's continue this."]
     }
 ])
+
 
 data = sample_data.copy()
 
@@ -120,24 +132,36 @@ def top_clients():
 def upload():
     global data
     if 'file' not in request.files:
-        return "No file uploaded", 400
+        return "No file part", 400
+
     file = request.files['file']
     if file.filename == '':
         return "No selected file", 400
+
     try:
-        content = file.read()
-        decoded = content.decode("utf-8")
-        df = pd.read_csv(io.StringIO(decoded))
-        df["emails"] = df["emails"].apply(eval)  # Convert string to list
+        # Read CSV into DataFrame
+        df = pd.read_csv(file)
+
+        # Convert emails string to list using semicolon separator
+        df["emails"] = df["emails"].apply(lambda x: x.split(";") if isinstance(x, str) else [])
+
+        # Basic validation
+        required_columns = {"name", "last_contact", "emails"}
+        if not required_columns.issubset(df.columns):
+            return "CSV must contain 'name', 'last_contact', and 'emails' columns", 400
+
+        # Replace the global data
         data = df
-        return "File uploaded and data loaded successfully. Access /analyze to see results."
+        return "File uploaded successfully", 200
+
     except Exception as e:
-        return f"Error processing file: {e}", 500
+        return f"Failed to process file: {str(e)}", 500
+
 
 
 @app.route("/")
 def home():
-    return "Smart Relationship Dashboard API is running. Visit /analyze to view results."
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
