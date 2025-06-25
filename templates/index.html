@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM Relationship Insights Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            text-align: center;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+
+        .flag-Healthy {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .flag-Needs\ Attention {
+            background-color: #f1c40f;
+        }
+
+        .flag-At\ Risk {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Client Relationship Dashboard</h1>
+    <button onclick="loadData()">Load Client Data</button>
+
+    <h2> Upload CRM Data (CSV)</h2>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" id="file-input" accept=".csv" required />
+        <button type="submit"> Upload</button>
+    </form>
+    <p id="upload-status"> </p>
+
+    <table id="results-table" style="display: none;">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Engagement Score</th>
+                <th>Sentiment</th>
+                <th>Trend</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+    </table>
+
+    <script>
+        async function loadData() {
+            const response = await fetch("/analyze");
+            const data = await response.json();
+            const table = document.getElementById("results-table");
+            const body = document.getElementById("results-body");
+            body.innerHTML = "";
+
+            data.forEach(client => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                        <td>${client.name}</td>
+                        <td>${client.engagement_score}</td>
+                        <td>${client.sentiment.toFixed(2)}</td>
+                        <td>${client.trend.toFixed(2)}</td>
+                        <td class="flag-${client.flag.replace(/\s/g, '\\ ')}">${client.flag}</td>
+                    `;
+                body.appendChild(row);
+            });
+
+            table.style.display = "table";
+        }
+
+        document.getElementById("upload-form").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const fileInput = document.getElementById("file-input");
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const res = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const status = document.getElementById("upload-status");
+            if (res.ok) {
+                status.textContent = "Upload successful! Click 'Load Client Data' to refresh.";
+                status.style.color = "green";
+            } else {
+                status.textContent = "Upload failed.";
+                status.style.color = "red";
+            }
+        });
+
+    </script>
+</body>
+</html>
